@@ -1,5 +1,10 @@
 import { useEffect, useState } from "react";
+import { useSelector, useDispatch } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 import { FaUser } from "react-icons/fa";
+import { register, reset } from "../features/auth/authSlice";
+import Spinner from "../components/Spinner";
 
 function Register() {
   const [formData, setFormData] = useState({
@@ -11,6 +16,25 @@ function Register() {
 
   const { name, email, password, confirmPassword } = formData;
 
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+
+  const { user, isLoading, isSuccess, isError, message } = useSelector(
+    (state) => state.auth
+  );
+
+  useEffect(() => {
+    if (isError) {
+      toast.error(message);
+    }
+
+    if (isSuccess || user) {
+      navigate("/");
+    }
+
+    dispatch(reset());
+  }, [user, isError, isSuccess, message, navigate, dispatch]);
+
   const onChange = (event) => {
     setFormData((prevState) => ({
       ...prevState,
@@ -20,7 +44,23 @@ function Register() {
 
   const onSubmit = (e) => {
     e.preventDefault();
+
+    if (password !== confirmPassword) {
+      toast.error("Password do not match");
+    } else {
+      const userData = {
+        name,
+        email,
+        password,
+      };
+
+      dispatch(register(userData));
+    }
   };
+
+  if (isLoading) {
+    return <Spinner />;
+  }
 
   return (
     <>
@@ -48,7 +88,7 @@ function Register() {
 
           <div className="form-group">
             <input
-              type="text"
+              type="email"
               className="form-control"
               id="email"
               name="email"
@@ -60,7 +100,7 @@ function Register() {
 
           <div className="form-group">
             <input
-              type="text"
+              type="password"
               className="form-control"
               id="password"
               name="password"
@@ -72,7 +112,7 @@ function Register() {
 
           <div className="form-group">
             <input
-              type="text"
+              type="password"
               className="form-control"
               id="confirmPassword"
               name="confirmPassword"
